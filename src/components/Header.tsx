@@ -2,7 +2,7 @@ import { BookOpen, Languages, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
 import { useLanguage } from '@/i18n/useLanguage';
 
-export type View = 'home' | 'words' | 'auth';
+export type View = 'home' | 'words' | 'practice' | 'progress' | 'auth';
 
 interface HeaderProps {
   view: View;
@@ -16,6 +16,8 @@ export function Header({ view, onNavigate }: HeaderProps) {
   const navItems: { id: View; label: string }[] = [
     { id: 'home', label: t('nav.home') },
     { id: 'words', label: t('nav.words') },
+    { id: 'practice', label: t('nav.practice') },
+    ...(user ? [{ id: 'progress' as const, label: t('nav.progress') }] : []),
   ];
 
   const handleSignOut = async () => {

@@ -3,6 +3,8 @@ import { AuthPage } from '@/components/AuthPage';
 import { Header, type View } from '@/components/Header';
 import { HomePage } from '@/components/HomePage';
 import { WordLibrary } from '@/components/WordLibrary';
+import { PracticePage } from '@/components/practice/PracticePage';
+import { ProgressPage } from '@/components/ProgressPage';
 import { useAuth } from '@/auth/useAuth';
 
 export function AppShell() {
@@ -15,8 +17,14 @@ export function AppShell() {
     content = <AuthPage onDone={() => setView('words')} />;
   } else if (view === 'home') {
     content = <HomePage onStart={() => setView('words')} />;
-  } else {
+  } else if (view === 'words') {
     content = <WordLibrary onRequestSignIn={() => setView('auth')} />;
+  } else if (view === 'practice') {
+    content = (
+      <PracticePage onRequestSignIn={() => setView('auth')} onViewProgress={() => setView('progress')} />
+    );
+  } else {
+    content = <ProgressPage onRequestSignIn={() => setView('auth')} />;
   }
 
   return (
