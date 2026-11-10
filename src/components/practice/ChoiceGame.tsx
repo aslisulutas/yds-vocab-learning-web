@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { useLanguage } from '@/i18n/useLanguage';
-import { buildChoiceQuestions, ROUND_SIZE, type GameProps, type Score } from '@/practice/quiz';
+import {
+  buildChoiceQuestions,
+  emptyScore,
+  recordAnswer,
+  ROUND_SIZE,
+  type GameProps,
+  type Score,
+} from '@/practice/quiz';
 
 export function ChoiceGame({ words, onScore, onFinish }: GameProps) {
   const { t } = useLanguage();
   const [questions] = useState(() => buildChoiceQuestions(words, ROUND_SIZE));
   const [index, setIndex] = useState(0);
-  const [score, setScore] = useState<Score>({ correct: 0, total: 0 });
+  const [score, setScore] = useState<Score>(emptyScore);
   const [picked, setPicked] = useState<string | null>(null);
 
   const question = questions[index];
@@ -16,10 +23,7 @@ export function ChoiceGame({ words, onScore, onFinish }: GameProps) {
 
   const choose = (option: string) => {
     if (picked !== null) return;
-    const next = {
-      correct: score.correct + (option === question.word.meaning ? 1 : 0),
-      total: score.total + 1,
-    };
+    const next = recordAnswer(score, question.word.word, option === question.word.meaning);
     setPicked(option);
     setScore(next);
     onScore(next);

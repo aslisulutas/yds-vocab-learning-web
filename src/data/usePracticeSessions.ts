@@ -1,24 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/useAuth';
-import { fetchPracticeSessions, type PracticeSession } from '@/data/practiceSessions';
+import { fetchMissedWords, fetchPracticeSessions, type PracticeSession } from '@/data/practiceSessions';
 
 export function usePracticeSessions() {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const [sessions, setSessions] = useState<PracticeSession[]>([]);
+  const [missedWords, setMissedWords] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     setSessions([]);
+    setMissedWords([]);
     setError(false);
     if (!userId) return;
 
     let active = true;
     setLoading(true);
-    fetchPracticeSessions()
-      .then((rows) => {
-        if (active) setSessions(rows);
+    Promise.all([fetchPracticeSessions(), fetchMissedWords()])
+      .then(([rows, missed]) => {
+        if (!active) return;
+        setSessions(rows);
+        setMissedWords(missed);
       })
       .catch(() => {
         if (active) setError(true);
@@ -32,5 +36,5 @@ export function usePracticeSessions() {
     };
   }, [userId]);
 
-  return { sessions, loading, error };
+  return { sessions, missedWords, loading, error };
 }

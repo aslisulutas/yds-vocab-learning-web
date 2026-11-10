@@ -1,13 +1,13 @@
 import { useState, type FormEvent } from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { useLanguage } from '@/i18n/useLanguage';
-import { ROUND_SIZE, shuffle, type GameProps, type Score } from '@/practice/quiz';
+import { emptyScore, recordAnswer, ROUND_SIZE, shuffle, type GameProps, type Score } from '@/practice/quiz';
 
 export function FillGame({ words, onScore, onFinish }: GameProps) {
   const { language, t } = useLanguage();
   const [questions] = useState(() => shuffle(words).slice(0, ROUND_SIZE));
   const [index, setIndex] = useState(0);
-  const [score, setScore] = useState<Score>({ correct: 0, total: 0 });
+  const [score, setScore] = useState<Score>(emptyScore);
   const [answer, setAnswer] = useState('');
   const [result, setResult] = useState<'correct' | 'wrong' | null>(null);
 
@@ -18,7 +18,7 @@ export function FillGame({ words, onScore, onFinish }: GameProps) {
     event.preventDefault();
     if (result !== null || answer.trim() === '') return;
     const isCorrect = answer.trim().toLowerCase() === question.word.toLowerCase();
-    const next = { correct: score.correct + (isCorrect ? 1 : 0), total: score.total + 1 };
+    const next = recordAnswer(score, question.word, isCorrect);
     setResult(isCorrect ? 'correct' : 'wrong');
     setScore(next);
     onScore(next);

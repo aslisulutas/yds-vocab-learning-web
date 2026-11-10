@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '@/i18n/useLanguage';
-import { MATCH_SIZE, shuffle, type GameProps, type Score } from '@/practice/quiz';
+import { emptyScore, MATCH_SIZE, recordAnswer, shuffle, type GameProps, type Score } from '@/practice/quiz';
 
 export function MatchingGame({ words, onScore, onFinish }: GameProps) {
   const { t } = useLanguage();
@@ -10,7 +10,7 @@ export function MatchingGame({ words, onScore, onFinish }: GameProps) {
   const [selectedMeaning, setSelectedMeaning] = useState<string | null>(null);
   const [matched, setMatched] = useState<string[]>([]);
   const [wrongPair, setWrongPair] = useState(false);
-  const [score, setScore] = useState<Score>({ correct: 0, total: 0 });
+  const [score, setScore] = useState<Score>(emptyScore);
 
   useEffect(() => {
     if (!wrongPair) return;
@@ -31,7 +31,7 @@ export function MatchingGame({ words, onScore, onFinish }: GameProps) {
     if (!word || !meaning) return;
 
     const isMatch = pairs.some((pair) => pair.word === word && pair.meaning === meaning);
-    const next = { correct: score.correct + (isMatch ? 1 : 0), total: score.total + 1 };
+    const next = recordAnswer(score, word, isMatch);
     setScore(next);
     onScore(next);
 

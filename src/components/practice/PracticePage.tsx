@@ -7,7 +7,7 @@ import { MatchingGame } from '@/components/practice/MatchingGame';
 import { vocabulary } from '@/data/words';
 import { useLanguage } from '@/i18n/useLanguage';
 import type { TranslationKey } from '@/i18n/translations';
-import type { GameKind, Score } from '@/practice/quiz';
+import { emptyScore, type GameKind, type Score } from '@/practice/quiz';
 
 const TIME_LIMIT_SECONDS = 60;
 
@@ -47,7 +47,7 @@ export function PracticePage({ onRequestSignIn, onViewProgress }: PracticePagePr
   const [phase, setPhase] = useState<Phase>({ kind: 'select' });
   const [timed, setTimed] = useState(false);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT_SECONDS);
-  const latestScore = useRef<Score>({ correct: 0, total: 0 });
+  const latestScore = useRef<Score>(emptyScore);
 
   useEffect(() => {
     if (phase.kind !== 'play' || !timed) return;
@@ -60,7 +60,7 @@ export function PracticePage({ onRequestSignIn, onViewProgress }: PracticePagePr
   }, [phase, timed, timeLeft]);
 
   const startGame = (game: GameKind) => {
-    latestScore.current = { correct: 0, total: 0 };
+    latestScore.current = emptyScore;
     setTimeLeft(TIME_LIMIT_SECONDS);
     setPhase({ kind: 'play', game });
   };

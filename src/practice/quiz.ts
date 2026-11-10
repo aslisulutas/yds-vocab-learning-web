@@ -5,6 +5,17 @@ export type GameKind = 'choice' | 'fill' | 'matching';
 export interface Score {
   correct: number;
   total: number;
+  missed: string[];
+}
+
+export const emptyScore: Score = { correct: 0, total: 0, missed: [] };
+
+export function recordAnswer(score: Score, word: string, isCorrect: boolean): Score {
+  return {
+    correct: score.correct + (isCorrect ? 1 : 0),
+    total: score.total + 1,
+    missed: isCorrect ? score.missed : [...score.missed, word],
+  };
 }
 
 export interface GameProps {

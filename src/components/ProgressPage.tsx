@@ -1,8 +1,20 @@
-import { LogIn, Target } from 'lucide-react';
-import { usePracticeSessions } from '@/data/usePracticeSessions';
+import { Award, BookOpen, Crosshair, Flame, GraduationCap, LogIn, Target, type LucideIcon } from 'lucide-react';
+import { BadgeGrid } from '@/components/progress/BadgeGrid';
+import { HardWordsCard } from '@/components/progress/HardWordsCard';
 import { useAuth } from '@/auth/useAuth';
 import { useLanguage } from '@/i18n/useLanguage';
-import { DAILY_GOAL, dailyTotals } from '@/practice/stats';
+import { useWordProgress } from '@/data/useWordProgress';
+import { usePracticeSessions } from '@/data/usePracticeSessions';
+import {
+  accuracyPercent,
+  currentStreak,
+  DAILY_GOAL,
+  dailyTotals,
+  earnedBadges,
+  hardWords,
+} from '@/practice/stats';
+
+const HARD_WORD_LIMIT = 10;
 
 interface ProgressPageProps {
   onRequestSignIn: () => void;
@@ -11,7 +23,8 @@ interface ProgressPageProps {
 export function ProgressPage({ onRequestSignIn }: ProgressPageProps) {
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const { sessions, loading, error } = usePracticeSessions();
+  const { sessions, missedWords, loading, error } = usePracticeSessions();
+  const { statuses, loadError: wordLoadError } = useWordProgress();
 
   if (!user) {
     return (
@@ -29,11 +42,23 @@ export function ProgressPage({ onRequestSignIn }: ProgressPageProps) {
     );
   }
 
-  const days = dailyTotals(sessions, 7, new Date());
+  const now = new Date();
+  const days = dailyTotals(sessions, 7, now);
   const todayDone = days[days.length - 1].total;
   const goalPercent = Math.min(100, Math.round((todayDone / DAILY_GOAL) * 100));
   const chartMax = Math.max(DAILY_GOAL, ...days.map((day) => day.total));
   const locale = language === 'tr' ? 'tr-TR' : 'en-US';
+
+  const streak = currentStreak(sessions, now);
+  const accuracy = accuracyPercent(sessions);
+  const statusValues = Object.values(statuses);
+  const learnedCount = statusValues.filter((status) => status === 'learned').length;
+  const inProgressCount = statusValues.filter((status) => status === 'learning').length;
+  const badges = earnedBadges(sessions, streak, learnedCount);
+  const hard = hardWords(missedWords, HARD_WORD_LIMIT);
+  const loadFailed = error || wordLoadError;
+
+  const pending = loading ? '...' : null;
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
@@ -42,7 +67,7 @@ export function ProgressPage({ onRequestSignIn }: ProgressPageProps) {
         <p className="mt-3 text-base leading-relaxed text-stone-700">{t('progress.subtitle')}</p>
       </div>
 
-      {error && (
+      {loadFailed && (
         <p role="alert" className="mt-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
           {t('progress.loadError')}
         </p>
@@ -103,6 +128,49 @@ export function ProgressPage({ onRequestSignIn }: ProgressPageProps) {
           <p className="mt-8 text-sm text-stone-700">{t('progress.empty')}</p>
         )}
       </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard icon={Flame} label={t('progress.streak')} value={pending ?? t('progress.streakValue', { count: streak })} />
+        <StatCard
+          icon={Crosshair}
+          label={t('progress.accuracy')}
+          value={pending ?? (accuracy === null ? '-' : `%${accuracy}`)}
+        />
+        <StatCard icon={GraduationCap} label={t('progress.learnedCount')} value={pending ?? String(learnedCount)} />
+        <StatCard icon={BookOpen} label={t('progress.inProgressCount')} value={pending ?? String(inProgressCount)} />
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <section className="rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-8">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-stone-900">
+            <Award className="h-5 w-5 text-teal-800" aria-hidden />
+            {t('progress.badges')}
+          </h2>
+          <div className="mt-6">
+            <BadgeGrid earned={badges} />
+          </div>
+        </section>
+
+        <HardWordsCard words={hard} loading={loading} />
+      </div>
     </section>
+  );
+}
+
+interface StatCardProps {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}
+
+function StatCard({ icon: Icon, label, value }: StatCardProps) {
+  return (
+    <div className="rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+      <p className="flex items-center gap-2 text-sm font-medium text-stone-700">
+        <Icon className="h-4 w-4 text-teal-800" aria-hidden />
+        {label}
+      </p>
+      <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-stone-900">{value}</p>
+    </div>
   );
 }
