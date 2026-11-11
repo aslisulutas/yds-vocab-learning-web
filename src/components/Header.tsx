@@ -1,6 +1,8 @@
-import { BookOpen, Languages, LogIn, LogOut } from 'lucide-react';
+import { BookOpen, Flame, Languages, LogIn, LogOut } from 'lucide-react';
 import { useAuth } from '@/auth/useAuth';
 import { useLanguage } from '@/i18n/useLanguage';
+import { usePracticeSessions } from '@/data/usePracticeSessions';
+import { currentStreak } from '@/practice/stats';
 
 export type View = 'home' | 'words' | 'practice' | 'progress' | 'auth';
 
@@ -12,6 +14,8 @@ interface HeaderProps {
 export function Header({ view, onNavigate }: HeaderProps) {
   const { language, setLanguage, t } = useLanguage();
   const { user, signOut } = useAuth();
+  const { sessions, loading: sessionsLoading } = usePracticeSessions();
+  const streak = currentStreak(sessions, new Date());
 
   const navItems: { id: View; label: string }[] = [
     { id: 'home', label: t('nav.home') },
@@ -58,6 +62,17 @@ export function Header({ view, onNavigate }: HeaderProps) {
               );
             })}
           </nav>
+
+          {user && !sessionsLoading && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-2 text-sm font-medium tabular-nums text-amber-900"
+              aria-label={t('progress.streakValue', { count: streak })}
+              title={t('progress.streak')}
+            >
+              <Flame className="h-4 w-4 text-amber-600" aria-hidden />
+              {streak}
+            </span>
+          )}
 
           {user ? (
             <button
